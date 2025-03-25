@@ -1,0 +1,122 @@
+version: "3.8"
+
+volumes:
+  shared-workspace:
+    name: "spark-practice-workspace"
+    driver: local
+  jupyter-settings:
+    name: "jupyter-settings"
+    driver: local
+  hdfs-namenode:
+    name: "hdfs-namenode"
+    driver: local
+  hdfs-datanode:
+    name: "hdfs-datanode"
+    driver: local
+
+services:
+  jupyterlab:
+    build: 
+      context: .
+      dockerfile: jupyterlab.Dockerfile
+    image: spark-practice-jupyterlab:latest
+    container_name: spark-practice-jupyterlab
+    ports:
+      - "8888:8888"
+    volumes:
+      - shared-workspace:/opt/workspace
+      - jupyter-settings:/root/.jupyter
+      - ./projects:/opt/workspace/projects
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    depends_on:
+      - spark-master
+      - hdfs-namenode
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  spark-master:
+    build:
+      context: .
+      dockerfile: spark-master.Dockerfile
+    image: spark-practice-master:latest
+    container_name: spark-practice-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - shared-workspace:/opt/workspace
+    environment:
+      - SPARK_LOCAL_IP=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+      
+  spark-worker:
+    build:
+      context: .
+      dockerfile: spark-worker.Dockerfile
+    image: spark-practice-worker:latest
+    container_name: spark-practice-worker
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"
+    volumes:
+      - shared-workspace:/opt/workspace
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_DRIVER_MEMORY=1G
+      - SPARK_EXECUTOR_MEMORY=1G
+      - SPARK_WORKER_PORT=8081
+      - SPARK_WORKER_WEBUI_PORT=8081
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+  
+  hdfs-namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: spark-practice-hdfs-namenode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hdfs-namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=spark-practice
+      - CORE_CONF_fs_defaultFS=hdfs://hdfs-namenode:9000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  hdfs-datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: spark-practice-hdfs-datanode
+    depends_on:
+      - hdfs-namenode
+    volumes:
+      - hdfs-datanode:/hadoop/dfs/data
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://hdfs-namenode:9000
+    restart: unless-stopped 
