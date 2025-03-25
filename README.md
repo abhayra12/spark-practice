@@ -5,31 +5,26 @@ A lightweight Spark environment for local practice with HDFS and JupyterLab.
 ## Architecture
 
 ```mermaid
-flowchart TD
-    %% Define nodes
-    User([User/Browser])
+graph TD
+    classDef master fill:#4285F4,color:white,stroke:none
+    classDef worker fill:#34A853,color:white,stroke:none
+    classDef store fill:#FBBC05,color:white,stroke:none
+    classDef client fill:#EA4335,color:white,stroke:none
     
-    subgraph Docker["Docker Environment"]
-        JL[JupyterLab:8888]
-        SM[Spark Master:8080]
-        SW[Spark Worker:8081]
-        NN[HDFS NameNode:9870]
-        DN[HDFS DataNode:9864]
-        WS["/opt/workspace<br>Projects"]
-    end
+    Client[JupyterLab Client]:::client
     
-    %% Define connections
-    User -->|http| JL
-    User -->|http| SM
-    User -->|http| SW
-    User -->|http| NN
+    Master[Spark Master<br>8080]:::master
     
-    JL -->|SparkSession| SM
-    SM <-->|Cluster| SW
-    SW -->|Read/Write| NN
-    NN <-->|Storage| DN
-    JL -->|Files| WS
-    SW -->|Files| WS
+    Worker1[Spark Worker 1<br>8081]:::worker
+    Worker2[Spark Worker 2<br>8082]:::worker
+    
+    HDFS[HDFS Storage<br>9870]:::store
+    
+    Client --> Master
+    Master --> Worker1
+    Master --> Worker2
+    Worker1 --> HDFS
+    Worker2 --> HDFS
 ```
 
 ## Features
