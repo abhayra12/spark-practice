@@ -9,6 +9,7 @@ A lightweight Spark environment for local practice with HDFS and JupyterLab.
 - JupyterLab with persistent settings
 - Bash terminal with Git support
 - Projects directory for your Spark exercises
+- Python 3.9 environment (for compatibility with PySpark 3.3.1)
 
 ## Getting Started
 
@@ -58,6 +59,16 @@ The following data is persisted:
 - Spark workspace
 
 ## Usage
+
+### Python Compatibility Note
+
+This environment uses Python 3.9 to ensure compatibility with PySpark 3.3.1. If you encounter any serialization errors like the following, it's likely a Python version compatibility issue:
+
+```
+_pickle.PicklingError: Could not serialize object: IndexError: tuple index out of range
+```
+
+The Dockerfiles are configured to install compatible versions, but if you're running code outside this environment, make sure to use Python 3.9 or 3.10 for best compatibility with PySpark 3.3.1.
 
 ### Working with Jupyter
 
