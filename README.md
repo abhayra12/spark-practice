@@ -18,18 +18,28 @@ A lightweight Spark environment for local practice with HDFS and JupyterLab.
 
 ### Setup
 
-1. Build the Docker images:
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/spark-practice.git
+```
+
+2. Navigate to the repository directory:
+```bash
+cd spark-practice
+```
+
+3. Build the Docker images:
 ```bash
 chmod +x build.sh
 ./build.sh
 ```
 
-2. Start the services:
+4. Start the services:
 ```bash
 docker-compose up -d
 ```
 
-3. Access the services:
+5. Access the services:
    - JupyterLab: http://localhost:8888
    - Spark Master UI: http://localhost:8080
    - Spark Worker UI: http://localhost:8081
@@ -97,4 +107,4 @@ docker-compose down
 To completely clean up (including volumes):
 ```bash
 docker-compose down -v
-``` 
+```
