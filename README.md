@@ -2,6 +2,56 @@
 
 A lightweight Spark environment for local practice with HDFS and JupyterLab.
 
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "Docker Environment"
+        subgraph "Storage Layer"
+            HDFS["HDFS NameNode<br>Port: 9870"]
+            DataNode["HDFS DataNode<br>Port: 9864"]
+        end
+        
+        subgraph "Processing Layer"
+            Master["Spark Master<br>Port: 7077, UI: 8080"]
+            Worker["Spark Worker<br>UI: 8081"]
+        end
+        
+        subgraph "Interface Layer"
+            Jupyter["JupyterLab<br>Port: 8888"]
+        end
+        
+        subgraph "Shared Resources"
+            Workspace["/opt/workspace<br>Projects Directory"]
+        end
+        
+        %% Connections
+        Master <-- Spark Communication --> Worker
+        Jupyter -- "SparkSession.builder" --> Master
+        Worker -- Read/Write Data --> HDFS
+        HDFS <--> DataNode
+        Jupyter -- Access Files --> Workspace
+        Worker -- Access Files --> Workspace
+    end
+    
+    User["User<br>(Browser)"] -- "http://localhost:8888" --> Jupyter
+    User -- "http://localhost:8080" --> Master
+    User -- "http://localhost:8081" --> Worker
+    User -- "http://localhost:9870" --> HDFS
+    
+    classDef storage fill:#f9f,stroke:#333,stroke-width:2px
+    classDef processing fill:#bbf,stroke:#333,stroke-width:2px
+    classDef interface fill:#bfb,stroke:#333,stroke-width:2px
+    classDef shared fill:#fbb,stroke:#333,stroke-width:2px
+    classDef user fill:#fff,stroke:#333,stroke-width:2px
+    
+    class HDFS,DataNode storage
+    class Master,Worker processing
+    class Jupyter interface
+    class Workspace shared
+    class User user
+```
+
 ## Features
 
 - Apache Spark 3.3.1 with master and worker nodes
